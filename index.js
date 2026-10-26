@@ -3,6 +3,10 @@ import { client, store } from './client.js'
 
 import './ping.js'
 import './sticker.js'
+import './test.js'
+import './test2.js'
+import './test3.js'
+import './voip.js'
 
 export { client, store }
 

@@ -1,7 +1,8 @@
 # Whatsapp zapo auth
 .auth
 .auth/
-
+.env
+node_modules
 
 # Logs
 logs

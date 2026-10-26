@@ -1,59 +1,46 @@
-import { client } from "./client.js";
-import sharp from "sharp";
-import { Sticker, StickerTypes } from 'stickers-formatter';
+import { client } from './client.js'
+import sharp from 'sharp'
+import { Sticker, StickerTypes } from 'stickers-formatter'
+import { getMessageText, parseCommand } from './lib/commands.js'
 
-async function convert(buffer) {
-  const sharpBuffer = await sharp(buffer)
+async function convertToSticker(imageBuffer) {
+  const webpBuffer = await sharp(imageBuffer)
     .resize(512, 512, {
       fit: 'contain',
       background: { r: 0, g: 0, b: 0, alpha: 0 }
     })
-    .webp({effort: 6})
-    .toBuffer();
+    .webp({ effort: 6 })
+    .toBuffer()
 
-  const sticker = new Sticker(sharpBuffer, {
+  const sticker = new Sticker(webpBuffer, {
     author: 'mininxd',
-    type: StickerTypes.ROUNDED,
-  });
+    type: StickerTypes.ROUNDED
+  })
 
-  return await sticker.toBuffer();
+  return sticker.toBuffer()
 }
 
+client.on('message', async (event) => {
+  try {
+    const message = event.message
+    const command = parseCommand(getMessageText(event))
 
+    if (!message || command?.command !== 's') return
 
-client.on("message", async (event) => {
-try {
-  const message = event.message;
-  if (!message) return;
+    if (!message.imageMessage) {
+      await client.message.send(event.key.remoteJid, 'No media provided')
+      return
+    }
 
-const text =
-  event.message?.conversation ??
-  event.message?.extendedTextMessage?.text
-  message.imageMessage?.caption ??
-  "";
-  
-if (text.trim().toLowerCase() !== "s") return;
+    const imageBuffer = await client.message.downloadBytes(event)
+    const stickerBuffer = await convertToSticker(imageBuffer)
 
-
-if (!message.imageMessage) {
-  await client.message.send(
-    event.key.remoteJid,
-    "No media provided"
-  );
-  return;
-}
-
-const imageData = await client.message.downloadBytes(event);
-const webpBuffer = await convert(imageData);
-
-  
-await client.message.send(event.key.remoteJid, {
-  type: "sticker",
-  media: webpBuffer,
-  mimetype: "image/webp"
-});
-
-} catch (error) {
-  console.error(error)
-}
-});
+    await client.message.send(event.key.remoteJid, {
+      type: 'sticker',
+      media: stickerBuffer,
+      mimetype: 'image/webp'
+    })
+  } catch (error) {
+    console.error(error)
+  }
+})

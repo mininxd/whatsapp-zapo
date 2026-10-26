@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { createPinoLogger, createStore, WaClient } from 'zapo-js'
 import { createSqliteStore } from '@zapo-js/store-sqlite'
+import { voipPlugin } from '@zapo-js/voip'
 
 await mkdir('.auth', { recursive: true })
 
@@ -32,6 +33,10 @@ export const store = createStore({
 })
 
 export const client = new WaClient(
-  { store, sessionId: 'default' },
+  {
+    store,
+    sessionId: 'default',
+    plugins: [voipPlugin()]
+  },
   logger
 )
